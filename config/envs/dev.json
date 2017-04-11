@@ -1,0 +1,16 @@
+{
+  "env": "dev",
+  "rabbit": {
+    "hosts": ["104.196.172.152"],
+    "port": 5673,
+    "user": "quizizz",
+    "password": "SkankHunter42"
+  },
+  "mongo": {
+    "host": "104.196.172.152",
+    "port": 27017,
+    "db": "quizizz",
+    "username": "dev",
+    "password": "QuizQuiz"
+  }
+}
