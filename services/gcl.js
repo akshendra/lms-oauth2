@@ -6,8 +6,6 @@
  * =============================================================================================
  */
 
-const { validate: v, sanitize } = require('quizizz-services');
-
 const LMS = require('../libs/lms');
 const dth = require('../helpers/datetime');
 const validate = require('../helpers/validations');
@@ -105,11 +103,12 @@ class GCL extends LMS {
    * Teachers will see all the submission
    */
   * getSubmisisons(request, token) {
-    v.validate(request, {
-      studentId: ['isString'],
-      courseId: ['isPresent', 'isString'],
-      courseWorkId: ['isPresent', 'isString'],
-    });
+    validate(request, joi.object().keys({
+      studentId: joi.string(),
+      courseId: joi.string().required(),
+      courseWorkId: joi.string().required(),
+    }));
+    validate(token, tokenValidation);
 
     const { courseId, courseWorkId, studentId } = request;
     const data = {
@@ -125,23 +124,21 @@ class GCL extends LMS {
   /**
    * Add an attachment to the submission, can be done by anybody
    */
-  * addAttachment(request) {
+  * addAttachment(request, token) {
     // validate
-    v.validate(request, {
-      userId: ['isPresent', 'isValidObjectId'],
-      courseId: ['isPresent', 'isString'],
-      courseWorkId: ['isPresent', 'isString'],
-      subId: ['isPresent', 'isString'],
-      link: ['isPresent', 'isObject'],
-    });
-    // validate link
-    v.validate(request.link, {
-      url: ['isPresent', 'isString'],
-      title: ['isPresent', 'isString'],
-      thumbnailUrl: ['isPresent', 'isString'],
-    });
+    validate(request, joi.object().keys({
+      courseId: joi.string().required(),
+      courseWorkId: joi.string().required(),
+      subId: joi.string().required(),
+      link: joi.object().keys({
+        url: joi.string().uri().required(),
+        title: joi.string().required(),
+        thumbnailUrl: joi.string(),
+      }),
+    }));
+    validate(token, tokenValidation);
 
-    const { courseId, courseWorkId, link, subId, userId } = request;
+    const { courseId, courseWorkId, link, subId } = request;
     const data = {
       addAttachment: [{
         link,
@@ -150,7 +147,7 @@ class GCL extends LMS {
 
     const route = `v1/courses/${courseId}/courseWork/${courseWorkId}/` +
       `studentSubmissions/${subId}:modifyAttachments`;
-    const response = yield this.post(route, data, userId);
+    const response = yield this.post(route, data, token);
     return response;
   }
 
@@ -158,21 +155,46 @@ class GCL extends LMS {
   /**
    * Turn in a submission, done by student only
    */
-  * submit(request) {
+  * submit(request, token) {
     // validate
-    v.validate(request, {
-      userId: ['isPresent', 'isValidObjectId'],
-      courseId: ['isPresent', 'isString'],
-      courseWorkId: ['isPresent', 'isString'],
-      subId: ['isPresent', 'isString'],
-    });
+    validate(request, joi.object().keys({
+      courseId: joi.string().required(),
+      courseWorkId: joi.string().required(),
+      subId: joi.string().required(),
+    }));
+    validate(token, tokenValidation);
 
-    const { courseId, courseWorkId, subId, userId } = request;
+    const { courseId, courseWorkId, subId } = request;
 
     const route = `v1/courses/${courseId}/courseWork/${courseWorkId}/` +
       `studentSubmissions/${subId}:turnIn`;
-    yield this.post(route, {}, userId);
+    yield this.post(route, {}, token);
     return true;
+  }
+
+
+  /**
+   * Grade a submission
+   */
+  * grade(request, token) {
+    validate(request, joi.object().keys({
+      courseId: joi.string().required(),
+      courseWorkId: joi.string().required(),
+      submission: joi.string().required(),
+      grade: joi.number().required(),
+    }));
+    validate(token, tokenValidation);
+
+    const { courseId, courseWorkId, submission, grade } = request;
+    const route = `v1/courses/${courseId}/courseWork/`
+      + `${courseWorkId}/studentSubmissions/${submission.id}`
+      + '?updateMask=grade';
+
+    const sub = Object.assign({}, submission, {
+      assignedGrade: grade,
+    });
+
+    yield this.patch(route, sub, token);
   }
 
 

@@ -7,8 +7,6 @@
  * =============================================================================================
  */
 
-const { validate: v, sanitize } = require('quizizz-services');
-
 const LMS = require('../libs/lms');
 const dth = require('../helpers/datetime');
 const tph = require('../helpers/templates');
