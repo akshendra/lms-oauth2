@@ -202,13 +202,12 @@ class GCL extends LMS {
    * Teacher can ask back the assignment when it's done
    */
   * askBack(request) {
-    // validate
-    v.validate(request, {
-      userId: ['isPresent', 'isValidObjectId'],
-      courseId: ['isPresent', 'isString'],
-      courseWorkId: ['isPresent', 'isString'],
-      subId: ['isPresent', 'isString'],
-    });
+    validate(request, joi.object().keys({
+      userId: joi.string().required(),
+      courseId: joi.string().required(),
+      courseWorkId: joi.string().required(),
+      subId: joi.string().required(),
+    }));
 
     const { courseId, courseWorkId, subId, userId } = request;
 

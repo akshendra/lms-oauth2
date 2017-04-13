@@ -57,6 +57,10 @@ class LMS {
   post(route, data, token) {
     return this.call('post', route, data, token);
   }
+
+  patch(route, data, token) {
+    return this.call('patch', route, data, token);
+  }
 }
 
 module.exports = LMS;

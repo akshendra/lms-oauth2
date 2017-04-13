@@ -164,7 +164,7 @@ class OAuth2Provider {
         method,
         responseType: 'json',
       };
-      if (method === 'post' || method === 'put') {
+      if (method === 'post' || method === 'put' || method === 'patch') {
         Object.assign(config, {
           url,
           data: bodyType === 'json' ? d : qs.stringify(d, { arrayFormat: 'repeat' }),
