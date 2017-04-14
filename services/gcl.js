@@ -92,8 +92,8 @@ class GCL extends LMS {
     };
 
     const route = `v1/courses/${courseId}/courseWork`;
-    const result = yield this.post(route, courseWork, token);
-    return result;
+    const response = yield this.post(route, courseWork, token);
+    return response;
   }
 
 
@@ -168,8 +168,8 @@ class GCL extends LMS {
 
     const route = `v1/courses/${courseId}/courseWork/${courseWorkId}/` +
       `studentSubmissions/${subId}:turnIn`;
-    yield this.post(route, {}, token);
-    return true;
+    const response = yield this.post(route, {}, token);
+    return response;
   }
 
 
@@ -194,27 +194,28 @@ class GCL extends LMS {
       assignedGrade: grade,
     });
 
-    yield this.patch(route, sub, token);
+    const response = yield this.patch(route, sub, token);
+    return response;
   }
 
 
   /**
    * Teacher can ask back the assignment when it's done
    */
-  * askBack(request) {
+  * askBack(request, token) {
     validate(request, joi.object().keys({
-      userId: joi.string().required(),
       courseId: joi.string().required(),
       courseWorkId: joi.string().required(),
       subId: joi.string().required(),
     }));
+    validate(token, tokenValidation);
 
-    const { courseId, courseWorkId, subId, userId } = request;
+    const { courseId, courseWorkId, subId } = request;
 
     const route = `v1/courses/${courseId}/courseWork/${courseWorkId}/` +
       `studentSubmissions/${subId}:return`;
-    yield this.post(route, {}, userId);
-    return true;
+    const response = yield this.post(route, {}, token);
+    return response;
   }
 }
 
