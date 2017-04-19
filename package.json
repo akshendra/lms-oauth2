@@ -1,8 +1,12 @@
 {
   "name": "lms-oauth2",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "messaging with lms systems",
   "main": "index.js",
+  "repository" : {
+    "type" : "git",
+    "url" : "https://github.com/akshendra/lms-oauth2.git"
+  },
   "scripts": {
     "dev": "nodemon index.js"
   },
