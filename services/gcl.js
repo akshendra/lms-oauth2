@@ -59,6 +59,7 @@ class GCL extends LMS {
   * createAssignment(request, token) {
     validate(request, joi.object().keys({
       courseId: joi.string().required(),
+      title: joi.string().required(),
       description: joi.string().default(''),
       link: joi.object().keys({
         url: joi.string().uri().required(),
@@ -74,12 +75,12 @@ class GCL extends LMS {
     }));
     validate(token, tokenValidation);
 
-    const { courseId, game, description, link, maxPoints } = request;
+    const { courseId, game, description, title, link, maxPoints } = request;
     const dueTS = dth.addSeconds(game.createdAt, game.expiry);
 
     // create a cource work
     const courseWork = {
-      title: game.name,
+      title,
       description,
       materials: [{
         link,
