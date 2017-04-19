@@ -223,6 +223,10 @@ class OAuth2Provider {
     return this.call('post', url, data, token, opts);
   }
 
+  patch(url, data, token, opts = {}) {
+    return this.call('post', url, data, token, opts);
+  }
+
   get(url, data, token, opts = {}) {
     return this.call('get', url, data, token, opts);
   }

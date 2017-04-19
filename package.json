@@ -1,6 +1,6 @@
 {
   "name": "lms-oauth2",
-  "version": "0.0.2",
+  "version": "0.0.31",
   "description": "messaging with lms systems",
   "main": "index.js",
   "scripts": {
@@ -22,6 +22,7 @@
     "co": "^4.6.0",
     "is_js": "^0.9.0",
     "joi": "^10.4.1",
-    "moment": "^2.17.1"
+    "moment": "^2.17.1",
+    "qs": "^6.4.0"
   }
 }

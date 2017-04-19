@@ -132,15 +132,13 @@ class GCL extends LMS {
       subId: joi.string().required(),
       link: joi.object().keys({
         url: joi.string().uri().required(),
-        title: joi.string().required(),
-        thumbnailUrl: joi.string(),
       }),
     }));
     validate(token, tokenValidation);
 
     const { courseId, courseWorkId, link, subId } = request;
     const data = {
-      addAttachment: [{
+      addAttachments: [{
         link,
       }],
     };
@@ -180,15 +178,14 @@ class GCL extends LMS {
     validate(request, joi.object().keys({
       courseId: joi.string().required(),
       courseWorkId: joi.string().required(),
-      submission: joi.string().required(),
+      submission: joi.object().required(),
       grade: joi.number().required(),
     }));
     validate(token, tokenValidation);
 
     const { courseId, courseWorkId, submission, grade } = request;
-    const route = `v1/courses/${courseId}/courseWork/`
-      + `${courseWorkId}/studentSubmissions/${submission.id}`
-      + '?updateMask=grade';
+    const route = `https://classroom.googleapis.com/v1/courses/${courseId}/courseWork/${courseWorkId}/studentSubmissions/${submission.id}`
+      + '?updateMask=assignedGrade';
 
     const sub = Object.assign({}, submission, {
       assignedGrade: grade,
