@@ -36,13 +36,19 @@ class GCL extends LMS {
    * Return all the courses
    */
   * getCourses(request, token) {
-    validate(request, joi.object().keys({
-      studentId: joi.string(),
-      teacherId: joi.string().default('me'),
-      courseStates: joi.array().items(joi.string().valid(validCourseState)).default(Date.now()),
-      pageSize: joi.number(),
-      pageToken: joi.string(),
-    }));
+    request = validate(
+      request,
+      joi.object().keys({
+        studentId: joi.string(),
+        teacherId: joi.string().default('me'),
+        courseStates: joi
+          .array()
+          .items(joi.string().valid(validCourseState))
+          .default('ACTIVE'),
+        pageSize: joi.number(),
+        pageToken: joi.string(),
+      }),
+    );
 
     const route = 'v1/courses';
     const data = Object.assign({}, request, {
@@ -52,51 +58,70 @@ class GCL extends LMS {
     return response;
   }
 
-
   /**
    * Create an assignment
    */
   * createAssignment(request, token) {
-    validate(request, joi.object().keys({
-      courseId: joi.string().required(),
-      title: joi.string().required(),
-      description: joi.string().default(''),
-      link: joi.object().keys({
-        url: joi.string().uri().required(),
+    request = validate(
+      request,
+      joi.object().keys({
+        courseId: joi.string().required(),
         title: joi.string().required(),
-        thumbnailUrl: joi.string(),
+        description: joi.string().default(''),
+        link: joi.object().keys({
+          url: joi.string().uri().required(),
+          title: joi.string().required(),
+          thumbnailUrl: joi.string(),
+        }),
+        game: joi.object().keys({
+          name: joi.string().required(),
+          expiry: joi.number().required(),
+          createdAt: joi.date().required(),
+        }),
+        maxPoints: joi.number().default(100),
+        startDate: joi.date(),
       }),
-      game: joi.object().keys({
-        name: joi.string().required(),
-        expiry: joi.number().required(),
-        createdAt: joi.date().required(),
-      }),
-      maxPoints: joi.number().default(100),
-    }));
+    );
     validate(token, tokenValidation);
 
-    const { courseId, game, description, title, link, maxPoints } = request;
+    const {
+      courseId,
+      game,
+      description,
+      title,
+      link,
+      maxPoints,
+      startDate,
+    } = request;
     const dueTS = dth.addSeconds(game.createdAt, game.expiry);
 
     // create a cource work
     const courseWork = {
       title,
       description,
-      materials: [{
-        link,
-      }],
+      materials: [
+        {
+          link,
+        },
+      ],
       state: 'PUBLISHED',
       dueDate: dth.getGCLDate(dueTS),
       dueTime: dth.getGCLTime(dueTS),
       workType: 'ASSIGNMENT',
       maxPoints,
     };
+    console.log(startDate);
+    if (startDate) {
+      Object.assign(courseWork, {
+        scheduledTime: startDate,
+        state: 'DRAFT',
+      });
+    }
 
     const route = `v1/courses/${courseId}/courseWork`;
     const response = yield this.post(route, courseWork, token);
     return response;
   }
-
 
   /**
    * Get the submission for the student
@@ -104,11 +129,14 @@ class GCL extends LMS {
    * Teachers will see all the submission
    */
   * getSubmisisons(request, token) {
-    validate(request, joi.object().keys({
-      studentId: joi.string(),
-      courseId: joi.string().required(),
-      courseWorkId: joi.string().required(),
-    }));
+    request = validate(
+      request,
+      joi.object().keys({
+        studentId: joi.string(),
+        courseId: joi.string().required(),
+        courseWorkId: joi.string().required(),
+      }),
+    );
     validate(token, tokenValidation);
 
     const { courseId, courseWorkId, studentId } = request;
@@ -121,72 +149,83 @@ class GCL extends LMS {
     return response;
   }
 
-
   /**
    * Add an attachment to the submission, can be done by anybody
    */
   * addAttachment(request, token) {
     // validate
-    validate(request, joi.object().keys({
-      courseId: joi.string().required(),
-      courseWorkId: joi.string().required(),
-      subId: joi.string().required(),
-      link: joi.object().keys({
-        url: joi.string().uri().required(),
+    request = validate(
+      request,
+      joi.object().keys({
+        courseId: joi.string().required(),
+        courseWorkId: joi.string().required(),
+        subId: joi.string().required(),
+        link: joi.object().keys({
+          url: joi.string().uri().required(),
+        }),
       }),
-    }));
+    );
     validate(token, tokenValidation);
 
     const { courseId, courseWorkId, link, subId } = request;
     const data = {
-      addAttachments: [{
-        link,
-      }],
+      addAttachments: [
+        {
+          link,
+        },
+      ],
     };
 
-    const route = `v1/courses/${courseId}/courseWork/${courseWorkId}/` +
+    const route =
+      `v1/courses/${courseId}/courseWork/${courseWorkId}/` +
       `studentSubmissions/${subId}:modifyAttachments`;
     const response = yield this.post(route, data, token);
     return response;
   }
-
 
   /**
    * Turn in a submission, done by student only
    */
   * submit(request, token) {
     // validate
-    validate(request, joi.object().keys({
-      courseId: joi.string().required(),
-      courseWorkId: joi.string().required(),
-      subId: joi.string().required(),
-    }));
+    request = validate(
+      request,
+      joi.object().keys({
+        courseId: joi.string().required(),
+        courseWorkId: joi.string().required(),
+        subId: joi.string().required(),
+      }),
+    );
     validate(token, tokenValidation);
 
     const { courseId, courseWorkId, subId } = request;
 
-    const route = `v1/courses/${courseId}/courseWork/${courseWorkId}/` +
+    const route =
+      `v1/courses/${courseId}/courseWork/${courseWorkId}/` +
       `studentSubmissions/${subId}:turnIn`;
     const response = yield this.post(route, {}, token);
     return response;
   }
 
-
   /**
    * Grade a submission
    */
   * grade(request, token) {
-    validate(request, joi.object().keys({
-      courseId: joi.string().required(),
-      courseWorkId: joi.string().required(),
-      submission: joi.object().required(),
-      grade: joi.number().required(),
-    }));
+    request = validate(
+      request,
+      joi.object().keys({
+        courseId: joi.string().required(),
+        courseWorkId: joi.string().required(),
+        submission: joi.object().required(),
+        grade: joi.number().required(),
+      }),
+    );
     validate(token, tokenValidation);
 
     const { courseId, courseWorkId, submission, grade } = request;
-    const route = `https://classroom.googleapis.com/v1/courses/${courseId}/courseWork/${courseWorkId}/studentSubmissions/${submission.id}`
-      + '?updateMask=assignedGrade';
+    const route =
+      `https://classroom.googleapis.com/v1/courses/${courseId}/courseWork/${courseWorkId}/studentSubmissions/${submission.id}` +
+      '?updateMask=assignedGrade';
 
     const sub = Object.assign({}, submission, {
       assignedGrade: grade,
@@ -196,21 +235,24 @@ class GCL extends LMS {
     return response;
   }
 
-
   /**
    * Teacher can ask back the assignment when it's done
    */
   * askBack(request, token) {
-    validate(request, joi.object().keys({
-      courseId: joi.string().required(),
-      courseWorkId: joi.string().required(),
-      subId: joi.string().required(),
-    }));
+    request = validate(
+      request,
+      joi.object().keys({
+        courseId: joi.string().required(),
+        courseWorkId: joi.string().required(),
+        subId: joi.string().required(),
+      }),
+    );
     validate(token, tokenValidation);
 
     const { courseId, courseWorkId, subId } = request;
 
-    const route = `v1/courses/${courseId}/courseWork/${courseWorkId}/` +
+    const route =
+      `v1/courses/${courseId}/courseWork/${courseWorkId}/` +
       `studentSubmissions/${subId}:return`;
     const response = yield this.post(route, {}, token);
     return response;

@@ -8,4 +8,6 @@ module.exports = function validate(request, schema) {
   if (result.error) {
     throw new OError(result.error, 500, 'validation', request);
   }
+
+  return result.value;
 };
